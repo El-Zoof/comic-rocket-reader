@@ -1,5 +1,5 @@
 import ComicsUtil from '../utils/ComicsUtil'
-
+ 
 function getBadgeTextFor (comics) {
   let unreadPagesCount = ComicsUtil.countUnreadPages(comics) || ''
   if (Number.isInteger(unreadPagesCount) && unreadPagesCount > 999) {
@@ -7,13 +7,13 @@ function getBadgeTextFor (comics) {
   }
   return unreadPagesCount
 }
-
+ 
 function updateBadgeText (comics) {
-  window.chrome.action.setBadgeText(
+  chrome.action.setBadgeText(
     { text: getBadgeTextFor(comics) }
   )
 }
-
+ 
 module.exports = {
   updateBadgeText
 }
