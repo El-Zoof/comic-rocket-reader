@@ -9,7 +9,7 @@ function getBadgeTextFor (comics) {
 }
 
 function updateBadgeText (comics) {
-  window.chrome.browserAction.setBadgeText(
+  window.chrome.action.setBadgeText(
     { text: getBadgeTextFor(comics) }
   )
 }
