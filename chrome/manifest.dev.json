@@ -1,9 +1,9 @@
 {
   "version": "3.0.2",
   "name": "Comic Rocker Reader BETA",
-  "manifest_version": 2,
+  "manifest_version": 3,
   "description": "Never miss a webcomic page again!",
-  "browser_action": {
+  "action": {
     "default_title": "Comic Rocker Reader",
     "default_popup": "popup.html"
   },
@@ -13,16 +13,26 @@
     "128": "img/icon128.png"
   },
   "web_accessible_resources": [
-    "inject.html"
+    {
+      "resources": ["inject.html"],
+      "matches": ["<all_urls>"]
+    }
   ],
   "background": {
-    "page": "background.html"
+    "service_worker": "js/background.bundle.js"
   },
   "permissions": [
     "cookies",
-    "management",
     "storage",
-    "https://www.comic-rocket.com/*"
+    "alarms",
+    "management"
   ],
-  "content_security_policy": "default-src 'self'; script-src 'self' http://localhost:3000 https://localhost:3000 https://www.comic-rocket.com 'unsafe-eval'; connect-src http://localhost:3000 https://localhost:3000 https://www.comic-rocket.com; style-src * 'unsafe-inline' 'self' blob:; img-src 'self' https://www.comic-rocket.com data:;"
+  "host_permissions": [
+    "https://www.comic-rocket.com/*",
+    "http://localhost:3000/*",
+    "https://localhost:3000/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "default-src 'self'; script-src 'self' 'unsafe-eval'; connect-src https://www.comic-rocket.com http://localhost:3000 https://localhost:3000; style-src 'self' 'unsafe-inline' blob:; img-src 'self' https://www.comic-rocket.com data:;"
+  }
 }
