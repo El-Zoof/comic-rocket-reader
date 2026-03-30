@@ -9,8 +9,12 @@ const defaultStorage = {
   backlog: []
 }
 
+// MV3: service workers don't inherit browser cookies automatically,
+// so we must send credentials explicitly with every request
+const requestConfig = { withCredentials: true }
+
 const checkLogin = () => {
-  http.get(LOGIN_CHECK).then(() => {
+  http.get(LOGIN_CHECK, requestConfig).then(() => {
     chrome.storage.local.get('comicRocketReader', storage => {
       const comicRocketReader = storage.comicRocketReader || defaultStorage
       comicRocketReader.isLoggedIn = true
@@ -25,7 +29,7 @@ const checkLogin = () => {
 }
 
 const updateComics = comicRocketReader => {
-  http.get(FETCH_COMICS).then((result) => {
+  http.get(FETCH_COMICS, requestConfig).then((result) => {
     const unreadPages = countUnreadPages(result.data.filter(comic => comicRocketReader.backlog.indexOf(comic.slug) === -1))
     chrome.action.setBadgeText({ text: unreadPages < 10000 ? '' + unreadPages : 'Lots' })
     comicRocketReader.comics = result.data
