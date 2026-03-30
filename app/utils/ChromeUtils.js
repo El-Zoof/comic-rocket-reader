@@ -21,11 +21,11 @@ function openOneOfManyNewTabFor (comic) {
 }
 
 function openNewTabFor (comic, closeExtension) {
-  window.chrome.tabs.create({ active: !!closeExtension, url: getWrappedUriFor(comic) })
+  chrome.tabs.create({ active: !!closeExtension, url: getWrappedUriFor(comic) })
 }
 
 function openLoginTab () {
-  window.chrome.tabs.create({ active: true, url: 'https://www.comic-rocket.com/login' })
+  chrome.tabs.create({ active: true, url: 'https://www.comic-rocket.com/login' })
 }
 
 function getWrappedUriFor (comic) {
