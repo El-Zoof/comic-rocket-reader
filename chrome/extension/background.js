@@ -17,24 +17,30 @@ const checkLogin = () => {
       updateComics(comicRocketReader)
     })
   }).catch(() => {
-    chrome.browserAction.setBadgeText({ text: '' })
+    chrome.action.setBadgeText({ text: '' })
     chrome.storage.local.set({comicRocketReader: {
       isLoggedIn: false
     }})
   })
-
-  setTimeout(() => {
-    checkLogin()
-  }, 30000)
 }
 
 const updateComics = comicRocketReader => {
   http.get(FETCH_COMICS).then((result) => {
     const unreadPages = countUnreadPages(result.data.filter(comic => comicRocketReader.backlog.indexOf(comic.slug) === -1))
-    chrome.browserAction.setBadgeText({ text: unreadPages < 10000 ? '' + unreadPages : 'Lots' })
+    chrome.action.setBadgeText({ text: unreadPages < 10000 ? '' + unreadPages : 'Lots' })
     comicRocketReader.comics = result.data
     chrome.storage.local.set({comicRocketReader})
   })
 }
 
+// MV3: Use chrome.alarms instead of setTimeout for periodic checks in service workers
+chrome.alarms.create('loginCheck', { periodInMinutes: 0.5 }) // every 30 seconds
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'loginCheck') {
+    checkLogin()
+  }
+})
+
+// Run immediately on service worker startup
 checkLogin()
