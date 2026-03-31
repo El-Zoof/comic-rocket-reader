@@ -1,6 +1,5 @@
 /* global chrome */
 
-import http from 'axios'
 import { FETCH_COMICS, LOGIN_CHECK } from '../../app/api/Paths'
 import { countUnreadPages } from '../../app/utils/ComicsUtil'
 
@@ -10,40 +9,43 @@ const defaultStorage = {
 }
 
 const checkLogin = () => {
-  http.get(LOGIN_CHECK, { withCredentials: true }).then(() => {
-    chrome.storage.local.get('comicRocketReader', storage => {
-      const comicRocketReader = storage.comicRocketReader || defaultStorage
-      comicRocketReader.isLoggedIn = true
-      comicRocketReader.lastError = null
-      updateComics(comicRocketReader)
+  fetch(LOGIN_CHECK, { credentials: 'include' })
+    .then(response => {
+      if (response.ok || response.status === 202) {
+        chrome.storage.local.get('comicRocketReader', storage => {
+          const comicRocketReader = storage.comicRocketReader || defaultStorage
+          comicRocketReader.isLoggedIn = true
+          comicRocketReader.lastError = null
+          updateComics(comicRocketReader)
+        })
+      } else {
+        throw new Error(`HTTP ${response.status}`)
+      }
     })
-  }).catch((err) => {
-    const errorDetail = err && err.response
-      ? `HTTP ${err.response.status}: ${err.response.statusText}`
-      : (err ? err.message : 'Unknown error')
-    chrome.action.setBadgeText({ text: '' })
-    chrome.storage.local.set({comicRocketReader: {
-      isLoggedIn: false,
-      lastError: errorDetail
-    }})
-  })
+    .catch(err => {
+      chrome.action.setBadgeText({ text: '' })
+      chrome.storage.local.set({ comicRocketReader: {
+        isLoggedIn: false,
+        lastError: err ? err.message : 'Unknown error'
+      }})
+    })
 }
 
 const updateComics = comicRocketReader => {
-  http.get(FETCH_COMICS, { withCredentials: true }).then((result) => {
-    const unreadPages = countUnreadPages(result.data.filter(comic => comicRocketReader.backlog.indexOf(comic.slug) === -1))
-    chrome.action.setBadgeText({ text: unreadPages < 10000 ? '' + unreadPages : 'Lots' })
-    comicRocketReader.comics = result.data
-    chrome.storage.local.set({comicRocketReader})
-  }).catch((err) => {
-    const errorDetail = err && err.response
-      ? `HTTP ${err.response.status}: ${err.response.statusText}`
-      : (err ? err.message : 'Unknown error')
-    chrome.storage.local.set({comicRocketReader: {
-      ...comicRocketReader,
-      lastError: 'updateComics failed: ' + errorDetail
-    }})
-  })
+  fetch(FETCH_COMICS, { credentials: 'include' })
+    .then(response => response.json())
+    .then(data => {
+      const unreadPages = countUnreadPages(data.filter(comic => comicRocketReader.backlog.indexOf(comic.slug) === -1))
+      chrome.action.setBadgeText({ text: unreadPages < 10000 ? '' + unreadPages : 'Lots' })
+      comicRocketReader.comics = data
+      chrome.storage.local.set({ comicRocketReader })
+    })
+    .catch(err => {
+      chrome.storage.local.set({ comicRocketReader: {
+        ...comicRocketReader,
+        lastError: 'updateComics failed: ' + (err ? err.message : 'Unknown error')
+      }})
+    })
 }
 
 // MV3: Use chrome.alarms instead of setTimeout for periodic checks in service workers
