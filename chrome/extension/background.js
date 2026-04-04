@@ -15,6 +15,7 @@ const checkLogin = () => {
         chrome.storage.local.get('comicRocketReader', storage => {
           const comicRocketReader = storage.comicRocketReader || defaultStorage
           comicRocketReader.isLoggedIn = true
+          comicRocketReader.backlog = comicRocketReader.backlog || []
           comicRocketReader.lastError = null
           updateComics(comicRocketReader)
         })
@@ -32,12 +33,15 @@ const checkLogin = () => {
 }
 
 const updateComics = comicRocketReader => {
+  const backlog = comicRocketReader.backlog || []
   fetch(FETCH_COMICS, { credentials: 'include' })
     .then(response => response.json())
     .then(data => {
-      const unreadPages = countUnreadPages(data.filter(comic => comicRocketReader.backlog.indexOf(comic.slug) === -1))
+      const comics = Array.isArray(data) ? data : []
+      const unreadPages = countUnreadPages(comics.filter(comic => backlog.indexOf(comic.slug) === -1))
       chrome.action.setBadgeText({ text: unreadPages < 10000 ? '' + unreadPages : 'Lots' })
-      comicRocketReader.comics = data
+      comicRocketReader.comics = comics
+      comicRocketReader.backlog = backlog
       chrome.storage.local.set({ comicRocketReader })
     })
     .catch(err => {
